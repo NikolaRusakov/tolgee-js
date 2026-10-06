@@ -16,5 +16,7 @@
       <T keyName="non_existant" defaultValue="Default value" />
     </div>
   </div>
-  <span slot="fallback">Loading...</span>
+  {#snippet fallback()}
+    <span>Loading...</span>
+  {/snippet}
 </TolgeeProvider>

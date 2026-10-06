@@ -1,29 +1,50 @@
 <script lang="ts">
-  import { onDestroy, onMount, setContext } from 'svelte';
+  import { onMount, setContext, type Snippet } from 'svelte';
   import type { TolgeeInstance } from '@tolgee/web';
   import type { TolgeeSvelteContext } from './types';
+  import { prepareTolgeeSSR, type SSROptions } from './ssr';
 
-  export let tolgee: TolgeeInstance;
-  export let fallback = undefined;
+  type Props = {
+    /** Initialized Tolgee instance. Keep it stable for the lifetime of the provider. */
+    tolgee: TolgeeInstance;
+    /** Rendered until the initial translations are loaded. */
+    fallback?: Snippet | string;
+    children?: Snippet;
+    /**
+     * Seed language and static data before the first render, so SvelteKit SSR and
+     * hydration render translated content immediately.
+     */
+    ssr?: SSROptions | boolean;
+  };
 
-  let isLoading: boolean = !tolgee.isLoaded();
+  const { tolgee, fallback, children, ssr }: Props = $props();
 
-  setContext('tolgeeContext', {
-    tolgee
-  } as TolgeeSvelteContext);
+  if (ssr) {
+    prepareTolgeeSSR(tolgee, typeof ssr === 'object' ? ssr : {});
+  }
 
+  let isLoading = $state(!tolgee.isLoaded());
+
+  setContext<TolgeeSvelteContext>('tolgeeContext', { tolgee });
+
+  // runs only in the browser, never during SSR
   onMount(() => {
-    tolgee.run().finally(() => {
-      isLoading = false;
-    });
+    tolgee
+      .run()
+      .catch((e) => {
+        console.error(e);
+      })
+      .finally(() => {
+        isLoading = false;
+      });
+    return () => tolgee.stop();
   });
-  onDestroy(tolgee.stop);
 </script>
 
 {#if !isLoading}
-  <slot />
+  {@render children?.()}
+{:else if typeof fallback === 'function'}
+  {@render fallback()}
 {:else if fallback}
   {fallback}
-{:else}
-  <slot name="fallback" />
 {/if}

@@ -5,6 +5,7 @@ import type { TolgeeInstance } from '@tolgee/web';
 import { TolgeeProvider } from '$lib';
 import TolgeeProviderSlotTestSvelte from './__testUtil/TolgeeProviderSlotTest.svelte';
 import TolgeeProviderFallback from './__testUtil/TolgeeProviderFallback.svelte';
+import TolgeeProviderLegacyParent from './__testUtil/TolgeeProviderLegacyParent.svelte';
 
 describe('TolgeeProvider', () => {
   let mockedTolgee: TolgeeInstance;
@@ -52,7 +53,7 @@ describe('TolgeeProvider', () => {
     });
   });
 
-  test('renders fallback with slot', async () => {
+  test('renders fallback snippet', async () => {
     render(TolgeeProviderSlotTestSvelte, {
       tolgee: mockedTolgee
     });
@@ -62,13 +63,22 @@ describe('TolgeeProvider', () => {
     });
   });
 
-  test("doesn't render fallback when initialLoading is false with slot", async () => {
+  test("doesn't render fallback when initialLoading is false with snippet", async () => {
     render(TolgeeProviderSlotTestSvelte, {
       tolgee: { ...mockedTolgee, isLoaded: () => true }
     });
     await waitFor(async () => {
       screen.getByText("It's rendered!");
       expect(screen.queryByText('loading')).toBeNull();
+    });
+  });
+
+  test('works when rendered from a legacy-mode parent', async () => {
+    render(TolgeeProviderLegacyParent, {
+      tolgee: { ...mockedTolgee, isLoaded: () => true }
+    });
+    await waitFor(async () => {
+      screen.getByText("It's rendered!");
     });
   });
 });

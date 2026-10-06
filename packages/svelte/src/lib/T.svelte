@@ -1,26 +1,30 @@
 <script lang="ts">
-  import type { NsType, TranslationKey } from '@tolgee/web';
-  import getTranslateInternal from './getTranslateInternal';
+  import type { NsType, TranslateParams, TranslationKey } from '@tolgee/web';
+  import { useTranslate } from './runes/useTranslate';
 
-  export let keyName: TranslationKey;
-  export let params: Record<string, unknown> | undefined = undefined;
-  export let noWrap = false;
-  export let defaultValue: string | undefined = undefined;
-  export let ns: NsType = undefined;
-  export let language: string = undefined;
+  type Props = {
+    keyName: TranslationKey;
+    params?: TranslateParams;
+    noWrap?: boolean;
+    defaultValue?: string;
+    ns?: NsType;
+    language?: string;
+  };
+
+  const { keyName, params, noWrap = false, defaultValue, ns, language }: Props = $props();
 
   if (!keyName) {
     console.error('Missing keyName prop!');
   }
 
-  const { t } = getTranslateInternal();
+  const { t } = useTranslate();
 </script>
 
-{$t({
+{t({
   key: keyName,
-  params: params,
-  noWrap: noWrap,
-  defaultValue: defaultValue,
+  params,
+  noWrap,
+  defaultValue,
   ns,
   language
 })}

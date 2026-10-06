@@ -22,6 +22,8 @@
 </script>
 
 <TolgeeProvider {tolgee}>
-  <div slot="fallback">Loading...</div>
+  {#snippet fallback()}
+    <div>Loading...</div>
+  {/snippet}
   {@render children?.()}
 </TolgeeProvider>

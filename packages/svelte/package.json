@@ -46,10 +46,12 @@
   "files": [
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/*.spec.*"
+    "!dist/**/*.spec.*",
+    "!dist/__integration",
+    "!dist/__testUtil"
   ],
   "peerDependencies": {
-    "svelte": "^4.0.0 || ^5.0.0"
+    "svelte": "^5.7.0"
   },
   "dependencies": {
     "@tolgee/web": "7.2.1"
@@ -72,7 +74,7 @@
     "prettier": "^3.1.1",
     "prettier-plugin-svelte": "^3.1.2",
     "publint": "^0.2.0",
-    "svelte": "^5.1.9",
+    "svelte": "^5.25.3",
     "svelte-check": "^4.0.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",

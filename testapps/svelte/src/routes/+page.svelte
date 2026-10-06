@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { T, getTranslate } from '@tolgee/svelte';
+  import { T, useTranslate } from '@tolgee/svelte';
   import Navbar from '../component/Navbar.svelte';
 
-  const { t } = getTranslate();
+  const { t } = useTranslate();
 
   const getInitialItems = () => {
     let items: string[] | undefined = undefined;
@@ -18,10 +18,11 @@
     return items?.length ? items : ['Passport', 'Maps and directions', 'Travel guide'];
   };
 
-  let items = getInitialItems();
-  let newItemValue: string;
+  let items = $state(getInitialItems());
+  let newItemValue = $state('');
 
-  const onAdd = () => {
+  const onAdd = (e: SubmitEvent) => {
+    e.preventDefault();
     if (newItemValue) {
       items = [...items, newItemValue];
       updateLocalStorage();
@@ -62,8 +63,8 @@
       </h1>
     </header>
     <section class="items">
-      <form class="items__new-item" on:submit|preventDefault={onAdd}>
-        <input bind:value={newItemValue} placeholder={$t({ key: 'add-item-input-placeholder' })} />
+      <form class="items__new-item" onsubmit={onAdd}>
+        <input bind:value={newItemValue} placeholder={t({ key: 'add-item-input-placeholder' })} />
         <button type="submit" disabled={!newItemValue} class="button">
           <img src="/img/iconAdd.svg" alt="Add" />
           <T keyName="add-item-add-button" />
@@ -73,18 +74,18 @@
         {#each items as item, index}
           <div class="item">
             <div class="item__text">{item}</div>
-            <button on:click={() => onDelete(index)}>
+            <button onclick={() => onDelete(index)}>
               <T keyName="delete-item-button" />
             </button>
           </div>
         {/each}
       </div>
       <div class="items__buttons">
-        <button class="button" on:click={onAction('share')}>
+        <button class="button" onclick={onAction('share')}>
           <img src="/img/iconShare.svg" alt="Share" />
           <T keyName="share-button" />
         </button>
-        <button class="button button--secondary" on:click={onAction('email')}>
+        <button class="button button--secondary" onclick={onAction('email')}>
           <img src="/img/iconMail.svg" alt="Send" />
           <T keyName="send-via-email" />
         </button>

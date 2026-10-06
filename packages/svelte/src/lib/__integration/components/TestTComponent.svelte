@@ -23,5 +23,7 @@
       <T keyName="hello_world" language="en" />
     </div>
   </div>
-  <span slot="fallback">Loading...</span>
+  {#snippet fallback()}
+    <span>Loading...</span>
+  {/snippet}
 </TolgeeProvider>

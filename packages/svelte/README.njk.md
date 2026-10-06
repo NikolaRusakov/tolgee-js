@@ -12,14 +12,20 @@ Integration of Tolgee is extremely simple! 🇯🇵 🇰🇷 🇩🇪 🇨🇳 �
 
 {{ macros.installation('svelte') }}
 
+{% raw %}
+Requires Svelte 5.7 or newer. All components are runes-native, so the package works with
+`compilerOptions.runes = true`.
+
 Then use the library in your app:
 
 ```svelte
 <script lang="ts">
-  import { TolgeeProvider, Tolgee, SveltePlugin, FormatSimple } from '@tolgee/svelte';
+  import { TolgeeProvider, Tolgee, DevTools, FormatSimple } from '@tolgee/svelte';
+
+  let { children } = $props();
 
   const tolgee = Tolgee()
-    .use(SveltePlugin())
+    .use(DevTools())
     .use(FormatSimple())
     .init({
       apiUrl: import.meta.env.VITE_TOLGEE_API_URL,
@@ -29,14 +35,19 @@ Then use the library in your app:
 </script>
 
 <TolgeeProvider {tolgee}>
-  <div slot="fallback">Loading...</div>
-  <slot />
+  {#snippet fallback()}
+    <div>Loading...</div>
+  {/snippet}
+  {@render children()}
 </TolgeeProvider>
 ```
 
+`fallback` also accepts a plain string: `<TolgeeProvider {tolgee} fallback="Loading...">`.
+
 ## Usage
 
-To translate texts using Tolgee Svelte integration, you can use `T` component or `getTranslate` function.
+To translate texts using Tolgee Svelte integration, you can use `T` component or the
+`useTranslate` function.
 
 ### T component
 
@@ -48,37 +59,89 @@ To translate texts using Tolgee Svelte integration, you can use `T` component or
 <T keyName="key" defaultValue="This is default" />
 ```
 
-### getTranslate function
+### useTranslate function
 
-The `getTranslate` function returns a store containing the function, which translates your key.
+`useTranslate` returns a plain `t` function. It is reactive wherever it is read: in the template,
+in `$derived` and in `$effect`. Call it during component initialization.
 
 ```svelte
-<script>
-  import { getTranslate } from '@tolgee/svelte';
+<script lang="ts">
+  import { useTranslate } from '@tolgee/svelte';
 
-  const { t } = getTranslate();
+  const translate = useTranslate('common');
+  const { t } = translate;
+  const title = $derived(t('page_title'));
 </script>
 
-{$t('this_is_a_key', { key: 'value', key2: 'value2' })}
+{#if translate.isLoading}
+  Loading...
+{:else}
+  <h1>{title}</h1>
+  <p>{t('this_is_a_key', { key: 'value', key2: 'value2' })}</p>
+{/if}
+```
+
+### Translating outside of components
+
+`createTranslate` is the context-free variant for `.svelte.ts` modules and class stores. You own
+its lifecycle, so call `destroy()` when it is no longer needed.
+
+```ts
+// labels.svelte.ts
+import { createTranslate } from '@tolgee/svelte';
+import { tolgee } from './tolgee';
+
+class Labels {
+  #translate = createTranslate(tolgee, 'common');
+  count = $state(0);
+  summary = $derived.by(() => this.#translate.t('items_count', { count: this.count }));
+}
 ```
 
 ### Changing the language
 
-To change the current language, use `getTolgee` method. For example, you can bind it to a select value.
+Use `useTolgee` to read reactive Tolgee state and change the language.
 
 ```svelte
 <script lang="ts">
-  import { getTolgee } from '@tolgee/svelte';
+  import { useTolgee } from '@tolgee/svelte';
 
-  const tolgee = getTolgee(['language']);
-
-  function handleLanguageChange(e) {
-    $tolgee.changeLanguage(e.currentTarget.value);
-  }
+  const tolgee = useTolgee(['pendingLanguage']);
 </script>
 
-<select value={$tolgee.getLanguage()} on:change={handleLanguageChange}> ... </select>
+<select
+  value={tolgee.getPendingLanguage()}
+  onchange={(e) => tolgee.changeLanguage(e.currentTarget.value)}
+>
+  ...
+</select>
 ```
+
+### Server-side rendering (SvelteKit)
+
+Pass the language and the static data to the provider. Tolgee is seeded before the first render,
+so the server HTML and hydration contain the translations. `tolgee.run()` is only called in the
+browser.
+
+```svelte
+<!-- +layout.svelte -->
+<TolgeeProvider {tolgee} ssr={{ language: data.language, staticData: data.staticData }}>
+  {@render children()}
+</TolgeeProvider>
+```
+
+### Legacy store API
+
+`getTranslate` and `getTolgee` still return Svelte stores (`$t(...)`, `$tolgee`). They keep
+working, but new code should use `useTranslate` and `useTolgee`.
+
+### Migrating from 7.x
+
+- `TolgeeProvider` takes a `fallback` snippet or string. A named `slot="fallback"` from the parent
+  is no longer rendered, because Svelte 5 does not pass named slots into runes components.
+- Replace `$t(...)` from `getTranslate` with `t(...)` from `useTranslate`, and `$tolgee` from
+  `getTolgee` with `useTolgee`.
+{% endraw %}
 
 {{ macros.prereq('Svelte') }}
 
